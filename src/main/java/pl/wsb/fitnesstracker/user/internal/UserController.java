@@ -9,37 +9,50 @@ import pl.wsb.fitnesstracker.user.api.UserService;
 
 import java.util.List;
 
-/**
- * UserController is responsible for handling HTTP requests related to user operations.
- * It provides endpoints for retrieving and creating users.
- */
 @RestController
 @RequestMapping("/v1/users")
 @RequiredArgsConstructor
 class UserController {
 
     private final UserService userService;
-
     private final UserProvider userProvider;
-
     private final UserMapper userMapper;
 
     @PostMapping
-    public UserDto addUser(@RequestBody UserDto userDto) throws InterruptedException {
+    public UserDto addUser(@RequestBody UserDto userDto) {
 
-        // TODO: Implement the method to add a new user.
-        //  You can use the @RequestBody annotation to map the request body to the UserDto object.
+        User user = userMapper.toUser(userDto);
 
-        return null;
+        User savedUser = userService.createUser(user);
+
+        return userMapper.toUserDto(savedUser);
     }
 
     @GetMapping
-    public List<UserDto> getUsers() throws InterruptedException {
+    public List<UserDto> getUsers() {
 
-       return this.userProvider.findAllUsers().stream()
-                .map(this.userMapper::toUserDto)
+        return userProvider.findAllUsers().stream()
+                .map(userMapper::toUserDto)
                 .toList();
     }
 
+    @GetMapping("/{id}")
+    public UserDto getUser(@PathVariable Long id) {
 
+        User user = userProvider.getUser(id)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("User not found"));
+
+        return userMapper.toUserDto(user);
+    }
+
+    @GetMapping("/search")
+    public UserDto getUserByEmail(@RequestParam String email) {
+
+        User user = userProvider.getUserByEmail(email)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("User not found"));
+
+        return userMapper.toUserDto(user);
+    }
 }
